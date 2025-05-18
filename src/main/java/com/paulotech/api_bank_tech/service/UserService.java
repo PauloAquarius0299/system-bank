@@ -1,9 +1,6 @@
 package com.paulotech.api_bank_tech.service;
 
-import com.paulotech.api_bank_tech.dto.BankResponse;
-import com.paulotech.api_bank_tech.dto.CreditDebitRequest;
-import com.paulotech.api_bank_tech.dto.EnquiryRequest;
-import com.paulotech.api_bank_tech.dto.UserRequest;
+import com.paulotech.api_bank_tech.dto.*;
 
 public interface UserService {
     BankResponse createAccount(UserRequest userRequest);
@@ -11,4 +8,5 @@ public interface UserService {
     String nameEnquiry(EnquiryRequest request);
     BankResponse creditAccount(CreditDebitRequest request);
     BankResponse debitAccount(CreditDebitRequest request);
+    BankResponse transfer(TransferRequest request);
 }
