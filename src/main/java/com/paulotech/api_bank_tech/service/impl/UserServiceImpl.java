@@ -2,9 +2,11 @@ package com.paulotech.api_bank_tech.service.impl;
 
 import com.paulotech.api_bank_tech.dto.AccountInfo;
 import com.paulotech.api_bank_tech.dto.BankResponse;
+import com.paulotech.api_bank_tech.dto.EmailDetails;
 import com.paulotech.api_bank_tech.dto.UserRequest;
 import com.paulotech.api_bank_tech.entity.User;
 import com.paulotech.api_bank_tech.repository.UserRepository;
+import com.paulotech.api_bank_tech.service.EmailService;
 import com.paulotech.api_bank_tech.service.UserService;
 import com.paulotech.api_bank_tech.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    EmailService emailService;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -44,6 +49,13 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(newUser);
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT CREATION")
+                .messageBody("Parabens!!Sua conta foi criado com  sucesso! \n Os detalhes da sua conta: " +
+                "\n Nome: " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + "\n Numero da conta: " +
+                        savedUser.getAccountNumber() + "\n Saldo: " + savedUser.getAccountBalance())
+                .build();
 
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATED_CODE)
