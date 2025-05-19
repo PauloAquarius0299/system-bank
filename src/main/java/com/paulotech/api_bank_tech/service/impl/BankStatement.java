@@ -4,10 +4,12 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.paulotech.api_bank_tech.dto.EmailDetails;
 import com.paulotech.api_bank_tech.entity.Transaction;
 import com.paulotech.api_bank_tech.entity.User;
 import com.paulotech.api_bank_tech.repository.TransactionRepository;
 import com.paulotech.api_bank_tech.repository.UserRepository;
+import com.paulotech.api_bank_tech.service.EmailService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,8 +29,11 @@ public class BankStatement {
 
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private EmailService emailService;
 
-    private static final String FILE_PATH = "bank_statement.pdf";
+    private static final String FILE_PATH = "C:\\Users\\Paulo Cesar\\OneDrive\\Documentos\\Java\\api-bank-tech\\src" +
+            "\\main" +
+            "\\java\\com\\paulotech\\api_bank_tech\\service\\impl\\bank_statement.pdf";
 
     public byte[] generateStatement(String accountNumber, String startDate, String endDate) throws IOException {
         LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
@@ -144,6 +149,14 @@ public class BankStatement {
             try (OutputStream fileOutputStream = new FileOutputStream(FILE_PATH)) {
                 fileOutputStream.write(byteArrayOutputStream.toByteArray());
             }
+
+            EmailDetails emailDetails = EmailDetails.builder()
+                    .recipient(user.getEmail())
+                    .subject("STATEMENT OF ACCOUNT")
+                    .messageBody("Kindly find attached your bank statement.")
+                    .attachment(FILE_PATH)
+                    .build();
+            emailService.sendEmailWithAttachment(emailDetails);
 
             return byteArrayOutputStream.toByteArray();
 
