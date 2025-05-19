@@ -4,6 +4,7 @@ import com.paulotech.api_bank_tech.dto.*;
 import com.paulotech.api_bank_tech.entity.User;
 import com.paulotech.api_bank_tech.repository.UserRepository;
 import com.paulotech.api_bank_tech.service.EmailService;
+import com.paulotech.api_bank_tech.service.TransactionService;
 import com.paulotech.api_bank_tech.service.UserService;
 import com.paulotech.api_bank_tech.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     EmailService emailService;
 
+    @Autowired
+    TransactionService transactionService;
+
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
         if(userRepository.existsByEmail(userRequest.getEmail())){
@@ -30,7 +34,6 @@ public class UserServiceImpl implements UserService {
                     .accountInfo(null)
                     .build();
         }
-
         User newUser = User.builder()
                 .firstName(userRequest.getFirstName())
                 .lastName(userRequest.getLastName())
@@ -45,7 +48,6 @@ public class UserServiceImpl implements UserService {
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status("ACTIVE")
                 .build();
-
         User savedUser = userRepository.save(newUser);
         EmailDetails emailDetails = EmailDetails.builder()
                 .recipient(savedUser.getEmail())
@@ -54,7 +56,6 @@ public class UserServiceImpl implements UserService {
                 "\n Nome: " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + "\n Numero da conta: " +
                         savedUser.getAccountNumber() + "\n Saldo: " + savedUser.getAccountBalance())
                 .build();
-
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATED_CODE)
                 .responseMessage(AccountUtils.ACCOUNT_CREATED_MESSAGE)
@@ -111,6 +112,14 @@ public class UserServiceImpl implements UserService {
         User userToCredit = userRepository.findByAccountNumber(request.getAccountNumber());
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(request.getAmount()));
         userRepository.save(userToCredit);
+
+        TransactionDto transactionDto = TransactionDto.builder()
+                .accountNumber(userToCredit.getAccountNumber())
+                .transactionType("CREDIT")
+                .amount(request.getAmount())
+                .build();
+        transactionService.saveTransaction(transactionDto);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS)
                 .responseCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE)
@@ -141,9 +150,15 @@ public class UserServiceImpl implements UserService {
                     .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
                     .accountInfo(null)
                     .build();
-        }else {
+        } else {
             userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(request.getAmount()));
             userRepository.save(userToDebit);
+            TransactionDto transactionDto = TransactionDto.builder()
+                    .accountNumber(userToDebit.getAccountNumber())
+                    .transactionType("DEBIT")
+                    .amount(request.getAmount())
+                    .build();
+            transactionService.saveTransaction(transactionDto);
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_DEBITED_SUCCESS)
                     .responseMessage(AccountUtils.ACCOUNT_DEBITED_SUCCESS_MESSAGE)

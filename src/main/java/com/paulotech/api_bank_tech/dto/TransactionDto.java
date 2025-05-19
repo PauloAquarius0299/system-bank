@@ -1,16 +1,19 @@
 package com.paulotech.api_bank_tech.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
-public class CreditDebitRequest {
-    private String accountNumber;
+@NoArgsConstructor
+@Data
+public class TransactionDto {
+    private String transactionType;
     private BigDecimal amount;
+    private String status;
+    private String accountNumber;
 }
