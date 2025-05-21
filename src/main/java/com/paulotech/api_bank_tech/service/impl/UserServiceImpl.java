@@ -1,19 +1,28 @@
 package com.paulotech.api_bank_tech.service.impl;
 
+import com.paulotech.api_bank_tech.config.JwtTokenProvider;
 import com.paulotech.api_bank_tech.dto.*;
+import com.paulotech.api_bank_tech.entity.Role;
 import com.paulotech.api_bank_tech.entity.User;
 import com.paulotech.api_bank_tech.repository.UserRepository;
 import com.paulotech.api_bank_tech.service.EmailService;
 import com.paulotech.api_bank_tech.service.TransactionService;
 import com.paulotech.api_bank_tech.service.UserService;
 import com.paulotech.api_bank_tech.utils.AccountUtils;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -24,6 +33,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     TransactionService transactionService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -44,9 +62,11 @@ public class UserServiceImpl implements UserService {
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status("ACTIVE")
+                .role(Role.valueOf("ROLE_ADMIN"))
                 .build();
         User savedUser = userRepository.save(newUser);
         EmailDetails emailDetails = EmailDetails.builder()
@@ -64,6 +84,24 @@ public class UserServiceImpl implements UserService {
                         .accountNumber(savedUser.getAccountNumber())
                         .accountName(savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName())
                         .build())
+                .build();
+    }
+
+    public BankResponse login(LoginDto loginDto){
+        Authentication authentication = null;
+        authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+        EmailDetails loginAlert = EmailDetails.builder()
+                .subject("Você logou com sucesso")
+                .recipient(loginDto.getEmail())
+                .messageBody("Você logou com sucesso no sistema. Se não iniciou ainda foi erro no sevidor interno, " +
+                        "Por gentilena, ligue para seu banco")
+                .build();
+        emailService.sendEmailAlert(loginAlert);
+        return BankResponse.builder()
+                .responseCode("Login com sucesso")
+                .responseMessage(jwtTokenProvider.generateToken(authentication))
                 .build();
     }
 
@@ -221,5 +259,25 @@ public class UserServiceImpl implements UserService {
                 .responseMessage(AccountUtils.TRANSFER_SUCCESSFUL_MESSAGE)
                 .accountInfo(null)
                 .build();
+    }
+
+    public static void main(String[] args){
+        UserRepository userRepository = null; // ou um mock
+        EmailService emailService = null;
+        TransactionService transactionService = null;
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        AuthenticationManager authenticationManager = null;
+        JwtTokenProvider jwtTokenProvider = null;
+
+        UserServiceImpl userService = new UserServiceImpl(
+                userRepository,
+                emailService,
+                transactionService,
+                passwordEncoder,
+                authenticationManager,
+                jwtTokenProvider
+        );
+
+        System.out.println(userService.passwordEncoder.encode("123456"));
     }
 }

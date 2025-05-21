@@ -30,6 +30,19 @@ public class UserController {
     }
 
     @Operation(
+            summary = "login",
+            description = "This API allows a user to log in to their account. It requires the user's email and password."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Http Status 201 CREATED"
+    )
+    @PostMapping("/login")
+    public BankResponse login(@RequestBody LoginDto loginDto) {
+        return userService.login(loginDto);
+    }
+
+    @Operation(
             summary = "Balance enquiry",
             description = "Given an account number, this API retrieves the current balance of the account."
     )
