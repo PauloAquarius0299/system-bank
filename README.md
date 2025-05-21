@@ -23,10 +23,10 @@ O objetivo principal deste projeto é apresentar, de forma clara e aplicada, com
 ### Arquitetura de solução 
 O sistema foi construído seguindo a arquitetura em camadas:
 
-* Controller Layer: Responsável por expor os endpoints da API REST e receber requisições dos clientes.
-* Service Layer: Contém a lógica de negócio central da aplicação, como validações, regras de transação e autenticação.
-* Repository Layer: Comunicação com o banco de dados através de Spring Data JPA.
-* Security Layer: Configuração personalizada do Spring Security, incluindo filtros JWT, controle de acesso e geração/validação de tokens.
+* Controller: Responsável por expor os endpoints da API REST e receber requisições dos clientes.
+* ServiceImpl: Contém a lógica de negócio central da aplicação, como validações, regras de transação e autenticação.
+* Repository: Comunicação com o banco de dados através de Spring Data JPA.
+* Configuration: Configuração personalizada do Spring Security, incluindo filtros JWT, controle de acesso e geração/validação de tokens.
 
 O uso de JWT permite autenticação sem estado (stateless), ideal para aplicações modernas e escaláveis, especialmente para APIs REST consumidas por frontends em React, Angular ou aplicações mobile.
 ### Ferramentas
